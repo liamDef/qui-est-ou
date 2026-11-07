@@ -295,6 +295,17 @@
         const fenetreCorps = document.getElementById("fenetre-corps");
         let evenementOuvert = null;
 
+        async function charger() {
+            const reponsePersos = await db.from("personnages").select();
+            personnages = reponsePersos.data;
+
+            const reponseEvents = await db.from("evenements").select().order("ordre");
+            evenements = reponseEvents.data;
+
+            afficherFrise();
+            afficher();
+        } 
+
         function echapper(texte) {
             return String(texte || "")
                 .replaceAll("&", "&amp;")
@@ -514,6 +525,7 @@
         function basculer(id) {
             document.getElementById(id).classList.toggle("cachee");
         }
+    charger()
     </script>
 </body>
 
