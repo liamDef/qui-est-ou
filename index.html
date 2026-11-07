@@ -295,6 +295,15 @@
         const fenetreCorps = document.getElementById("fenetre-corps");
         let evenementOuvert = null;
 
+        function echapper(texte) {
+            return String(texte || "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;")
+        }
+
         function nomEvenement(id) {
             for (const e of evenements) {
                 if (String(e.id) === id) {
@@ -313,7 +322,7 @@
                 if (jours > 15) {
                     classe = "perime";
                 }
-                const ligne = "<tr class='" + classe + "'><td>" + p.nom + "</td><td>" + nomEvenement(p.evenementActuel) + "</td><td>" + p.statut + "</td><td>" + p.maj + "</td><td><button onclick='supprimer(" + personnages.indexOf(p) + ")'>Supprimer</button></td</tr>";
+                const ligne = "<tr class='" + classe + "'><td>" + echapper(p.nom) + "</td><td>" + echapper(nomEvenement(p.evenementActuel)) + "</td><td>" + echapper(p.statut) + "</td><td>" + echapper(p.maj) + "</td><td><button onclick='supprimer(" + personnages.indexOf(p) + ")'>Supprimer</button></td</tr>";
                 if (p.groupe === "Gardes") {
                     listeGarde.innerHTML += ligne;
                 } else {
@@ -336,9 +345,9 @@
                     }
                     html += "<div class ='repere'>";
                 }
-                html += "<div class='evt'><span class='nom'><span class='lien' onclick='voirEvenement(" + position + ")'>" + e.nom + "</span> <button class='croix' onclick='supprimerEvenement(" + position + ")'>x</button></span></div>";
-                apres.innerHTML += "<option value='" + position + "'>" + e.nom + "</option>";
-                evenementPerso.innerHTML += "<option value='" + e.id + "'>" + e.nom + "</option>";
+                html += "<div class='evt'><span class='nom'><span class='lien' onclick='voirEvenement(" + position + ")'>" + echapper(e.nom) + "</span> <button class='croix' onclick='supprimerEvenement(" + position + ")'>x</button></span></div>";
+                apres.innerHTML += "<option value='" + position + "'>" + echapper(e.nom) + "</option>";
+                evenementPerso.innerHTML += "<option value='" + e.id + "'>" + echapper(e.nom) + "</option>";
             }
             if (html !== "") {
                 html += "</div>";
@@ -462,18 +471,18 @@
             const e = evenements[position];
             evenementOuvert = e;
 
-            let html = "<h2>" + e.nom + "</h2>";
+            let html = "<h2>" + echapper(e.nom) + "</h2>";
             if (e.image) {
-                html += "<img src='" + e.image + "'>";
+                html += "<img src='" + echapper(e.image) + "'>";
             }
             if (e.resume) {
-                html += "<p>" + e.resume + "</p>";
+                html += "<p>" + echapper(e.resume) + "</p>";
             }
 
             let participants = "";
             for (const p of personnages) {
                 if (p.historique && p.historique.includes(String(e.id))) {
-                    participants += "<li>" + p.nom + "</li>";
+                    participants += "<li>" + echapper(p.nom) + "</li>";
                 }
             }
             html += "<h3>Participants</h3>";
