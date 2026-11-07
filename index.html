@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Qui est où ?</title>
+    <style>
+        body {
+            background-color: #1e1f22;
+            color: #d8cdb8;
+            font-family: Georgia, serif;
+            max-width: 900px;
+            margin: 0 au0to;
+            padding: 20px;
+        }
+
+        h1,
+        h2 {
+            color: #c9a77c;
+            font-weight: normal;
+        }
+
+        h1 {
+            border-bottom: 2px solid #8a6a45;
+        }
+
+        h2 {
+            margin-top: 40px;
+            border-bottom: 1px solid #d8cdb8;
+            padding-bottom: 5px;
+        }
+
+        input,
+        select,
+        button,
+        textarea {
+            background-color: #1e1f22;
+            color: #d8cdb8;
+            border: 1px solid #d8cdb8;
+            padding: 6px 10px;
+            font-family: Georgia, serif;
+            vertical-align: middle;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #8a6a45;
+            color: #232a1f;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            color: #c9a77c;
+            text-align: left;
+            font-weight: normal;
+
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #d8cdb8;
+        }
+
+        .perime {
+            opacity: 0.4;
+        }
+
+        #frise {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 0;
+            align-items: flex-start;
+        }
+
+        .repere {
+            position: relative;
+            padding-right: 40px;
+        }
+
+        .repere::after {
+            content: "";
+            position: absolute;
+            top: 9px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #8a6a45;
+        }
+
+        .repere::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            bottom: 10px;
+            left: 5px;
+            width: 2px;
+            background-color: #8a6a45;
+        }
+
+        .evt {
+            position: relative;
+            height: 20px;
+            line-height: 20px;
+            padding-left: 12px;
+            margin-bottom: 12px;
+            white-space: nowrap;
+        }
+
+        .evt:last-child {
+            margin-bottom: 0;
+        }
+
+        .evt::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #c9a77c;
+            z-index: 2;
+        }
+
+        .nom {
+            position: relative;
+            z-index: 1;
+            background-color: #1e1f22;
+            padding: 0 6px;
+        }
+
+        .croix {
+            border: none;
+            background: none;
+            padding: 0 4px;
+            opacity: 0.5;
+        }
+
+        .croix:hover {
+            opacity: 1;
+            background: none;
+            color: #c9a77c;
+        }
+
+        #fenetre {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        #fenetre.cachee {
+            display: none;
+        }
+
+        .cachee {
+            display: none;
+        }
+
+        .fenetre-contenu {
+            position: relative;
+            background-color: #1e1f22;
+            border: 1px solid #8a6a45;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .fenetre-contenu img {
+            max-width: 100%;
+        }
+
+        .fenetre-contenu .croix {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .lien {
+            cursor: pointer;
+        }
+
+        .lien:hover {
+            color: #c9a77c;
+        }
+
+        .fenetre-contenu textarea,
+        .fenetre-contenu input {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;   
+        }
+
+        .fenetre-contenu textarea {
+            height: 100px;
+        }
+
+        .fenetre-contenu p {
+            white-space: pre-line;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Qui est où ?</h1>
+
+    <button onclick="basculer('form-perso')">Nouveau personnage</button>
+    <div id ="form-perso" class="cachee">
+        <input id="nom" placeholder="Nom du personnage">
+        <input id="statut" placeholder="Situation">
+        <select id="evenementPerso"></select>
+        <select id="groupe">
+            <option value="Gardes">Garde</option>
+            <option value="Gardes-forestiers">Garde forestier</option>
+         </select>
+        <button onclick="ajouter()">Ajouter</button>
+    </div>
+
+    <h2>Garde</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Personnage</th>
+                <th>Évènement</th>
+                <th>Où/quoi</th>
+                <th>Mise à jour</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="liste-garde">
+        </tbody>
+    </table>
+
+    <h2>Gardes-forestiers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Personnage</th>
+                <th>Évènement</th>
+                <th>Où/quoi</th>
+                <th>Mise à jour</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="liste-forestier">
+        </tbody>
+    </table>
+
+    <h2>Ligne du temps</h2>
+    <button onclick="basculer('form-evenement')">Nouvel évènement</button>
+    <div id="form-evenement" class="cachee">
+        <input id="evenement" placeholder="Nom de l'évènement">
+        <select id="apres"></select>
+        <label><input type="checkbox" id="simultane"> En même temps</label>
+        <button onclick="ajouterEvenement()">Ajouter</button>
+    </div>
+    <div id="frise"></div>
+    <div id="fenetre" class="cachee">
+        <div class="fenetre-contenu">
+            <button class="croix" onclick="fermerFenetre()">x</button>
+            <div id="fenetre-corps"></div>
+        </div>
+    </div>
+
+    <script>
+
+        const personnages = JSON.parse(localStorage.getItem("personnages")) || [];
+        const listeGarde = document.getElementById("liste-garde");
+        const listeForestier = document.getElementById("liste-forestier");
+        const evenements = JSON.parse(localStorage.getItem("evenements")) || [];
+        const frise = document.getElementById("frise");
+        const apres = document.getElementById("apres");
+        const evenementPerso = document.getElementById("evenementPerso");
+        const fenetre = document.getElementById("fenetre");
+        const fenetreCorps = document.getElementById("fenetre-corps");
+        let evenementOuvert = null;
+
+        function nomEvenement(id) {
+            for (const e of evenements) {
+                if (String(e.id) === id) {
+                    return e.nom;
+                }
+            }
+            return "";
+        }
+
+        function afficher() {
+            listeGarde.innerHTML = "";
+            listeForestier.innerHTML = "";
+            for (const p of personnages) {
+                const jours = (new Date() - new Date(p.maj)) / 86400000;
+                let classe = "";
+                if (jours > 15) {
+                    classe = "perime";
+                }
+                const ligne = "<tr class='" + classe + "'><td>" + p.nom + "</td><td>" + nomEvenement(p.evenementActuel) + "</td><td>" + p.statut + "</td><td>" + p.maj + "</td><td><button onclick='supprimer(" + personnages.indexOf(p) + ")'>Supprimer</button></td</tr>";
+                if (p.groupe === "Gardes") {
+                    listeGarde.innerHTML += ligne;
+                } else {
+                    listeForestier.innerHTML += ligne;
+                }
+            }
+        }
+
+        afficher();
+
+        function afficherFrise() {
+            let html = "";
+            apres.innerHTML = "<option value='-1'>Au début</option>";
+            evenementPerso.innerHTML = "<option value =''>-</option><option value='quitter'>Quitter l'évènement</option>";
+            for (const e of evenements) {
+                const position = evenements.indexOf(e);
+                if (!e.simultane || html === "") {
+                    if (html !== "") {
+                        html += "</div>";
+                    }
+                    html += "<div class ='repere'>";
+                }
+                html += "<div class='evt'><span class='nom'><span class='lien' onclick='voirEvenement(" + position + ")'>" + e.nom + "</span> <button class='croix' onclick='supprimerEvenement(" + position + ")'>x</button></span></div>";
+                apres.innerHTML += "<option value='" + position + "'>" + e.nom + "</option>";
+                evenementPerso.innerHTML += "<option value='" + e.id + "'>" + e.nom + "</option>";
+            }
+            if (html !== "") {
+                html += "</div>";
+            }
+            frise.innerHTML = html;
+            apres.value = evenements.length - 1;
+        }
+
+        afficherFrise();
+
+        function ajouter() {
+            const nom = document.getElementById("nom").value.trim();
+            if (nom === "") {
+                return;
+            }
+            console.log(nom);
+            const statut = document.getElementById("statut").value;
+            console.log(statut);
+            const groupe = document.getElementById("groupe").value;
+            const evenementID = evenementPerso.value;
+            const maj = new Date().toISOString().slice(0, 10);
+            let existante = null;
+            for (const p of personnages) {
+                if (p.nom === nom) {
+                    existante = p;
+                }
+            }
+            if (existante) {
+                existante.statut = statut;
+                existante.maj = maj;
+                existante.groupe = groupe;
+                if (evenementID === "quitter") {
+                    existante.evenementActuel = "";
+                } else if (evenementID !== "") {
+                    existante.evenementActuel = evenementID;
+                    if (!existante.historique.includes(evenementID)) {
+                        existante.historique.push(evenementID);
+                    }
+                }
+            } else {
+                const fiche = {
+                    id: Date.now(),
+                    nom: nom,
+                    statut: statut,
+                    maj: maj,
+                    groupe: groupe,
+                    evenementActuel: "",
+                    historique: []
+                };
+                if (evenementID !== "" && evenementID !== "quitter") {
+                    fiche.evenementActuel = evenementID;
+                    fiche.historique.push(evenementID);
+                }
+                personnages.push(fiche);
+            }
+            localStorage.setItem("personnages", JSON.stringify(personnages));
+            afficher();
+            console.log(personnages);
+            document.getElementById("nom").value = "";
+            document.getElementById("statut").value = "";
+        }
+
+        function supprimer(position) {
+            confirm("Supprimer " + personnages[position].nom + " ?")
+            if (confirm("Supprimer " + personnages[position].nom + " ?") === false) {
+                return;
+            }
+            personnages.splice(position, 1);
+            localStorage.setItem("personnages", JSON.stringify(personnages));
+            afficher();
+        }
+
+        function ajouterEvenement() {
+            const nom = document.getElementById("evenement").value.trim();
+            if (nom === "") {
+                return;
+            }
+            const simultane = document.getElementById("simultane").checked;
+            const fiche = {
+                id: Date.now(),
+                nom: nom,
+                simultane: simultane,
+                resume: "",
+                image: ""
+            };
+            let position = Number(apres.value) + 1;
+            while (simultane === false && evenements[position] && evenements[position].simultane) {
+                position++;
+            }
+            evenements.splice(position, 0, fiche);
+            localStorage.setItem("evenements", JSON.stringify(evenements));
+            afficherFrise();
+            document.getElementById("evenement").value = "";
+            document.getElementById("simultane").checked = false;
+        }
+
+        function supprimerEvenement(position) {
+            confirm("Supprimer " + evenements[position].nom + " ?")
+            if (confirm("Supprimer " + evenements[position].nom + " ?") === false) {
+                return;
+            }
+            evenements.splice(position, 1);
+            localStorage.setItem("evenements", JSON.stringify(evenements));
+            afficherFrise();
+        }
+
+        function fermerFenetre() {
+            fenetre.classList.add("cachee");
+            evenementOuvert = null;
+        }
+
+        function basculerEdition() {
+            document.getElementById("edition").classList.toggle("cachee");
+        }
+
+        function voirEvenement(position) {
+            const e = evenements[position];
+            evenementOuvert = e;
+
+            let html = "<h2>" + e.nom + "</h2>";
+            if (e.image) {
+                html += "<img src='" + e.image + "'>";
+            }
+            if (e.resume) {
+                html += "<p>" + e.resume + "</p>";
+            }
+
+            let participants = "";
+            for (const p of personnages) {
+                if (p.historique && p.historique.includes(String(e.id))) {
+                    participants += "<li>" + p.nom + "</li>";
+                }
+            }
+            html += "<h3>Participants</h3>";
+            if (participants === "") {
+                html += "<p>Aucun participant.</p>";
+            } else {
+                html += "<ul>" + participants + "</ul>";
+            }
+
+            html += "<button onclick='basculerEdition()'> Modifier</button>";
+            html += "<div id ='edition' class='cachee'>";
+            html += "<textarea id='edit-resume' placeholder='Résumé'></textarea>";
+            html += "<input id='edit-image' placeholder='Lien vers une image'>";
+            html += "<button onclick='enregistrerEvenement()'>Enregistrer</button>";
+            html += "</div>";
+            fenetreCorps.innerHTML = html;
+            document.getElementById("edit-resume").value = e.resume || "";
+            document.getElementById("edit-image").value = e.image || "";
+            fenetre.classList.remove("cachee");
+        }
+
+        function enregistrerEvenement(){
+            evenementOuvert.resume = document.getElementById("edit-resume").value.trim();
+            evenementOuvert.image = document.getElementById("edit-image").value.trim();
+            localStorage.setItem("evenements", JSON.stringify(evenements));
+            voirEvenement(evenements.indexOf(evenementOuvert));
+        }
+
+        function basculer(id) {
+            document.getElementById(id).classList.toggle("cachee");
+        }
+    </script>
+</body>
+
+</html>
