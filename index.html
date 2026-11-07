@@ -284,10 +284,10 @@
 
         const db = supabase.createClient("https://bqksvzypizyzgpqmzugg.supabase.co", "sb_publishable_zr21GoS50Sj33hiz2LjitA_MMwBDlpR");
 
-        const personnages = JSON.parse(localStorage.getItem("personnages")) || [];
+        let personnages = [];
         const listeGarde = document.getElementById("liste-garde");
         const listeForestier = document.getElementById("liste-forestier");
-        const evenements = JSON.parse(localStorage.getItem("evenements")) || [];
+        let evenements = [];
         const frise = document.getElementById("frise");
         const apres = document.getElementById("apres");
         const evenementPerso = document.getElementById("evenementPerso");
@@ -349,7 +349,7 @@
 
         afficherFrise();
 
-        function ajouter() {
+        async function ajouter() {
             const nom = document.getElementById("nom").value.trim();
             if (nom === "") {
                 return;
@@ -378,6 +378,7 @@
                         existante.historique.push(evenementID);
                     }
                 }
+                await db.from("personnages").upsert(existante);
             } else {
                 const fiche = {
                     id: Date.now(),
@@ -393,25 +394,25 @@
                     fiche.historique.push(evenementID);
                 }
                 personnages.push(fiche);
+                await db.from("personnages").upsert(fiche);
             }
-            localStorage.setItem("personnages", JSON.stringify(personnages));
             afficher();
             console.log(personnages);
             document.getElementById("nom").value = "";
             document.getElementById("statut").value = "";
         }
 
-        function supprimer(position) {
+        async function supprimer(position) {
             confirm("Supprimer " + personnages[position].nom + " ?")
             if (confirm("Supprimer " + personnages[position].nom + " ?") === false) {
                 return;
             }
+            await db.from("personnages").delete().eq("id", personnages[position].id);
             personnages.splice(position, 1);
-            localStorage.setItem("personnages", JSON.stringify(personnages));
             afficher();
         }
 
-        function ajouterEvenement() {
+        async function ajouterEvenement() {
             const nom = document.getElementById("evenement").value.trim();
             if (nom === "") {
                 return;
@@ -429,19 +430,22 @@
                 position++;
             }
             evenements.splice(position, 0, fiche);
-            localStorage.setItem("evenements", JSON.stringify(evenements));
+            for (const e of evenements) {
+                e.ordre = evenements.indexOf(e);
+            }
+            await db.from("evenements").upsert(evenements);
             afficherFrise();
             document.getElementById("evenement").value = "";
             document.getElementById("simultane").checked = false;
         }
 
-        function supprimerEvenement(position) {
+        async function supprimerEvenement(position) {
             confirm("Supprimer " + evenements[position].nom + " ?")
             if (confirm("Supprimer " + evenements[position].nom + " ?") === false) {
                 return;
             }
+            await db.from ("evenements").delete().eq("id", evenements[position].id);
             evenements.splice(position, 1);
-            localStorage.setItem("evenements", JSON.stringify(evenements));
             afficherFrise();
         }
 
@@ -491,10 +495,10 @@
             fenetre.classList.remove("cachee");
         }
 
-        function enregistrerEvenement(){
+        async function enregistrerEvenement(){
             evenementOuvert.resume = document.getElementById("edit-resume").value.trim();
             evenementOuvert.image = document.getElementById("edit-image").value.trim();
-            localStorage.setItem("evenements", JSON.stringify(evenements));
+            await db.from("evenments").upsert(evenementOuvert);
             voirEvenement(evenements.indexOf(evenementOuvert));
         }
 
