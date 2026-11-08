@@ -294,6 +294,7 @@
         const fenetre = document.getElementById("fenetre");
         const fenetreCorps = document.getElementById("fenetre-corps");
         let evenementOuvert = null;
+        const situations = ["De garde", "En mission", "En patrouille", "En convalescence", "En permission", "Repos"]
 
         async function charger() {
             const reponsePersos = await db.from("personnages").select();
@@ -315,6 +316,33 @@
                 .replaceAll("'", "&#39;")
         }
 
+        function menuSituations(position, actuelle) {
+            let html = "<select onchange='changerSituation(" + position + ", this.value)'>";
+            for (const s of situations) {
+                let choisi = "";
+                if (s === actuelle) {
+                    choisi = " selected";
+                }
+                html += "<option" + choisi + ">" + echapper(s) + "<option>";
+            }
+            html += "</selected>";
+            return html;
+        }
+
+        function menuEvenements(position, actuel) {
+            let html = "<select onchange='changerEvenement(" + position + ", this.value)'>";
+            html += "<option value=''>Aucun</option>";
+            for (const e of evenements) {
+                let choisi = "";
+                if (String(e.id) === actuel) {
+                    choisi = " selected";
+                }
+                html += "<option value='" + e.id + "'" + choisi + ">" + echapper(e.nom) + "</option>";
+            }
+            html += "</select>";
+            return html;
+        }
+
         function nomEvenement(id) {
             for (const e of evenements) {
                 if (String(e.id) === id) {
@@ -333,7 +361,7 @@
                 if (jours > 15) {
                     classe = "perime";
                 }
-                const ligne = "<tr class='" + classe + "'><td>" + echapper(p.nom) + "</td><td>" + echapper(nomEvenement(p.evenementActuel)) + "</td><td>" + echapper(p.statut) + "</td><td>" + echapper(p.maj) + "</td><td><button onclick='supprimer(" + personnages.indexOf(p) + ")'>Supprimer</button></td</tr>";
+                const ligne = "<tr class='" + classe + "'><td>" + echapper(p.nom) + "</td><td>" + menuEvenements(personnages.indexOf(p),p.evenementActuel) + "</td><td>" + menuSituations(personnages.indexOf(p), p.statut) + "</td><td>" + echapper(p.maj) + "</td><td><button onclick='supprimer(" + personnages.indexOf(p) + ")'>Supprimer</button></td</tr>";
                 if (p.groupe === "Gardes") {
                     listeGarde.innerHTML += ligne;
                 } else {
@@ -364,6 +392,7 @@
                 html += "</div>";
             }
             frise.innerHTML = html;
+            frise.scrollLeft = frise.scrollWidth;
             apres.value = evenements.length - 1;
         }
 
@@ -432,6 +461,38 @@
             afficher();
         }
 
+        async function changerSituation(position,situation) {
+            const p = personnages[position];
+            if (confirm(p.nom + " : " + situation + " ?") === false) {
+                afficher();
+                return;
+            }
+            p.statut = situation;
+            p.maj = new Date().toISOString().slice(0, 10);
+            await db.from("personnages").upsert(p);
+            afficher();
+        }
+
+        async function changerEvenement(position, id) {
+            const p = personnages[position];
+            console.log("Choix reçu :", position, id, "Actuel :", p.evenementActuel);
+            let nomChoisi = "Aucun évènement";
+            if (id !== "") {
+                nomChoisi = nomEvenement(id);
+            }
+            if (confirm(p.nom + " : " + nomChoisi + " ?") === false) {
+                afficher();
+                return;
+            }
+            p.evenementActuel = id;
+            if (id !== "" && !p.historique.includes(id)) {
+                p.historique.push(id);
+            }
+            p.maj = new Date().toISOString().slice(0, 10);
+            await db.from("personnages").upsert(p);
+            afficher();
+        }
+
         async function ajouterEvenement() {
             const nom = document.getElementById("evenement").value.trim();
             if (nom === "") {
@@ -455,6 +516,7 @@
             }
             await db.from("evenements").upsert(evenements);
             afficherFrise();
+            afficher();
             document.getElementById("evenement").value = "";
             document.getElementById("simultane").checked = false;
         }
@@ -467,6 +529,7 @@
             await db.from ("evenements").delete().eq("id", evenements[position].id);
             evenements.splice(position, 1);
             afficherFrise();
+            afficher();
         }
 
         function fermerFenetre() {
@@ -505,20 +568,28 @@
 
             html += "<button onclick='basculerEdition()'> Modifier</button>";
             html += "<div id ='edition' class='cachee'>";
+            html += "<input id='edit-nom' placeholder='Nom'>";
             html += "<textarea id='edit-resume' placeholder='Résumé'></textarea>";
             html += "<input id='edit-image' placeholder='Lien vers une image'>";
             html += "<button onclick='enregistrerEvenement()'>Enregistrer</button>";
             html += "</div>";
             fenetreCorps.innerHTML = html;
+            document.getElementById("edit-nom").value = e.nom || "";
             document.getElementById("edit-resume").value = e.resume || "";
             document.getElementById("edit-image").value = e.image || "";
             fenetre.classList.remove("cachee");
         }
 
         async function enregistrerEvenement(){
+            const nouveauNom = document.getElementById("edit-nom").value.trim();
+            if (nouveauNom !== "") {
+                evenementOuvert.nom = nouveauNom;
+            }
             evenementOuvert.resume = document.getElementById("edit-resume").value.trim();
             evenementOuvert.image = document.getElementById("edit-image").value.trim();
-            await db.from("evenments").upsert(evenementOuvert);
+            await db.from("evenements").upsert(evenementOuvert);
+            afficherFrise()
+            afficher()
             voirEvenement(evenements.indexOf(evenementOuvert));
         }
 
